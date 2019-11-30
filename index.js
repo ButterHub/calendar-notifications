@@ -146,7 +146,7 @@ const geocode = async (location) => {
 const main = async () => {
   const location = await getLatestEventLocation(fs.readFileSync(filename + '.json'));
   const geolocation = await geocode(location);
-  console.log(geolocation)
+  console.log(geolocation.results[0])
 }
 
 main();
