@@ -31,7 +31,7 @@ const API_KEY = process.env.api_key
 
 const getLatestEventLocation = async (credentials) => {
   const auth = await authorize(JSON.parse(credentials))
-  // console.log(auth)
+  console.log({auth})
   try {
     const events = await getEvents(auth, 1);
     return events[0].location
@@ -55,9 +55,10 @@ async function authorize(credentials) {
     token = await fs.readFileSync(TOKEN_PATH);
   } catch (e) {
     console.log("Token did not exist, get one from Google.")
-    return await getAccessToken(oAuth2Client); // returns nothing
+    await getAccessToken(oAuth2Client);
+    token = await fs.readFileSync(TOKEN_PATH);
   }
-  oAuth2Client.setCredentials(JSON.parse(token));; // returns nothing
+  oAuth2Client.setCredentials(JSON.parse(token)); 
   return oAuth2Client;
   }
 

@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "start-old": "node fetch-event.js"
+    "start": "node fetch-event.js"
   },
-  "author": "",
+  "author": "Ben",
   "license": "ISC",
   "dependencies": {
+    "busboy": "^0.3.1",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "googleapis": "^39.2.0",
