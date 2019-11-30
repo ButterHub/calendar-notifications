@@ -16,8 +16,10 @@
  */
 // [START calendar_quickstart]
 const fs = require('fs');
+const GoogleMapsAPI = require('googlemaps')
 const readline = require('readline');
 const {google} = require('googleapis');
+require('dotenv').config()
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
@@ -25,39 +27,21 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 // created automatically when the authorization flow completes for the first
 // time.
 const TOKEN_PATH = 'token.json';
+const filename = "ford_credentials"
+const API_KEY = process.env.api_key
 
-const listEvents = async () => {
-  await authorize(JSON.parse(credentials))
+const getLatestEventLocation = async (credentials) => {
+  const auth = await authorize(JSON.parse(credentials))
   try {
-    const events = await getEvents();
-    console.log(events)
+    const events = await getEvents(auth, 1);
+    return events[0].location
+    // make request to gmaps api to get coordinates. use API_KEY
+    // node requests
+
   } catch (err) {
     return console.log('The API returned an error: ' + err);
   }
 }
-
-// Get list of all events with "CO" in the name. (Imperial computing events start with this). Save to file
-const filename = "credentials"
-const credentials = fs.readFileSync(filename + '.json')
-listEvents();
-
-// use gmaps api to get coordinates
-
-
-
-// Load file, and delete events with corresponding UIDS
-// const filesmap = JSON.parse(fs.readFileSync('uidsCorrect.json'))
-// for (i in filesmap) {
-//   const uid = filesmap[i]
-//   setTimeout(()=>{
-//     console.log(uid)
-//     authorize(JSON.parse(credentials), deleteEvent(uid))
-//   }, 
-//     i*250
-//   )
-// }
-
-
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
  * given callback function.
@@ -65,7 +49,7 @@ listEvents();
  * @param {function} callback The callback to call with the authorized client.
  */
 async function authorize(credentials) {
-  const {client_secret, client_id, redirect_uris} = credentials.installed// credentials.web;
+  const {client_secret, client_id, redirect_uris} = credentials.installed// credentials.web or credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
 
@@ -76,7 +60,8 @@ async function authorize(credentials) {
     console.log("Token did not exist, get one from Google.")
     return await getAccessToken(oAuth2Client); // returns nothing
   }
-  return oAuth2Client.setCredentials(JSON.parse(token));; // returns nothing
+  oAuth2Client.setCredentials(JSON.parse(token));; // returns nothing
+  return oAuth2Client;
   }
 
 /**
@@ -131,6 +116,40 @@ async function getEvents(auth, size) {
       });
     })
 }
+
+const geocode = async (location) => {
+  const publicConfig = {
+    key: API_KEY,
+    stagger_time:       1000, // for elevationPath
+    encode_polylines:   false,
+    secure:             true, // use https
+    // proxy:              'http://127.0.0.1:9999' // optional, set a proxy for HTTP requests
+  };
+  const gmAPI = new GoogleMapsAPI(publicConfig);
+
+  var geocodeParams = {
+    "address":    location,
+    // "components": "components=country:GB",
+    // "bounds":     "55,-1|54,1",
+    // "language":   "en",
+    // "region":     "uk"
+  };
+
+  return new Promise((res, rej) => {
+    gmAPI.geocode(geocodeParams, function(err, result){
+      if (err) return rej(err)
+      return res(result)
+    });
+  })
+}
+
+const main = async () => {
+  const location = await getLatestEventLocation(fs.readFileSync(filename + '.json'));
+  const geolocation = await geocode(location);
+  console.log(geolocation)
+}
+
+main();
 
 module.exports = {
   SCOPES
