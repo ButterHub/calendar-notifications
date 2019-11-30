@@ -28,7 +28,8 @@ const TOKEN_PATH = 'token.json';
 
 // Get list of all events with "CO" in the name. (Imperial computing events start with this). Save to file
 const credentials = fs.readFileSync('credentials.json')
-authorize(JSON.parse(credentials), listEvents)
+authorize(JSON.parse(credentials))
+listEvents()
 
 // Load file, and delete events with corresponding UIDS
 // const filesmap = JSON.parse(fs.readFileSync('uidsCorrect.json'))
@@ -49,18 +50,20 @@ authorize(JSON.parse(credentials), listEvents)
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-function authorize(credentials, callback) {
+async function authorize(credentials) {
   const {client_secret, client_id, redirect_uris} = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
 
-  // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, (err, token) => {
-    if (err) return getAccessToken(oAuth2Client, callback);
-    oAuth2Client.setCredentials(JSON.parse(token));
-    callback(oAuth2Client);
-  });
-}
+  let token;
+  try {
+    token = await fs.readFileSync(TOKEN_PATH);
+  } catch (e) {
+    console.log("Token did not exist, get one from Google.")
+    return getAccessToken(oAuth2Client, callback);
+  }
+  oAuth2Client.setCredentials(JSON.parse(token));;
+  }
 
 /**
  * Get and store new token after prompting for user authorization, and then
