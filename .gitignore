@@ -1,5 +1,5 @@
 node_modules
 token.json
 client_secret.json
-*credentials.json.env
+*credentials.json
 .env
