@@ -31,16 +31,16 @@ const credentials = fs.readFileSync('credentials.json')
 authorize(JSON.parse(credentials), listEvents)
 
 // Load file, and delete events with corresponding UIDS
-const filesmap = JSON.parse(fs.readFileSync('uidsCorrect.json'))
-for (i in filesmap) {
-  const uid = filesmap[i]
-  setTimeout(()=>{
-    console.log(uid)
-    authorize(JSON.parse(credentials), deleteEvent(uid))
-  }, 
-    i*250
-  )
-}
+// const filesmap = JSON.parse(fs.readFileSync('uidsCorrect.json'))
+// for (i in filesmap) {
+//   const uid = filesmap[i]
+//   setTimeout(()=>{
+//     console.log(uid)
+//     authorize(JSON.parse(credentials), deleteEvent(uid))
+//   }, 
+//     i*250
+//   )
+// }
 
 
 /**
@@ -99,24 +99,23 @@ function getAccessToken(oAuth2Client, callback) {
  */
 function listEvents(auth) {
   const calendar = google.calendar({version: 'v3', auth});
+  const size = 1;
   calendar.events.list({
     calendarId: 'primary',
     timeMin: (new Date()).toISOString(),
-    maxResults: 500,
+    maxResults: size,
     singleEvents: true,
     orderBy: 'startTime',
   }, (err, res) => {
     if (err) return console.log('The API returned an error: ' + err);
     const events = res.data.items;
     if (events.length) {
-      const COevents = []
+      console.log('Upcoming ' + size + ' events:');
       events.map((event, i) => {
-        if (event.summary.startsWith("CO")) {
-          console.log(`${event.summary} - ${event.id}`);
-          COevents.push(event.id)
-        }
+        console.log(event)
+        // const start = event.start.dateTime || event.start.date;
+        // console.log(`${start} - ${event.summary}`);
       });
-      fs.writeFileSync('uids.json', JSON.stringify(COevents))
     } else {
       console.log('No upcoming events found.');
     }
