@@ -1,13 +1,15 @@
 {
-  "name": "cal-api",
-  "version": "1.0.0",
-  "description": "",
+  "name": "cape-cloud-run",
+  "version": "0.1.0",
+  "description": "Using cloud run to watch, then listen to event notifications from Google Calendar API push notifications",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node fetch-event.js"
+    "start": "node index.js",
+    "fetch": "node fetch-event.js",
+    "deploy": "gcloud builds submit --tag gcr.io/ford-hack-99744/cape && gcloud run deploy --image gcr.io/ford-hack-99744/cape --platform managed"
   },
-  "author": "Ben",
+  "author": "Ben Butterworth",
   "license": "ISC",
   "dependencies": {
     "busboy": "^0.3.1",
@@ -15,5 +17,9 @@
     "express": "^4.17.1",
     "googleapis": "^39.2.0",
     "googlemaps": "^1.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ButterHub/Calendar-events-delete"
   }
 }
