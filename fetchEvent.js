@@ -29,11 +29,12 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 const TOKEN_PATH = 'token.json';
 const API_KEY = process.env.api_key
 
-const getLatestEventLocation = async (credentials) => {
-  const auth = await authorize(JSON.parse(credentials))
-  console.log({auth})
+const getLatestEventLocation = async (credentials, token) => {
+  const auth = await authorize(JSON.parse(credentials), token)
+  // console.log({auth})
   try {
     const events = await getEvents(auth, 1);
+    console.log({events})
     return events[0].location
   } catch (err) {
     return console.log('The API returned an error: ' + err);
@@ -45,20 +46,24 @@ const getLatestEventLocation = async (credentials) => {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-async function authorize(credentials) {
-  const {client_secret, client_id, redirect_uris} = credentials.installed// credentials.web or credentials.installed;
+async function authorize(credentials, token) {
+  const {client_secret, client_id, redirect_uris} = credentials.installed
   const oAuth2Client = new google.auth.OAuth2(
-      client_id, client_secret, redirect_uris[0]);
-
-  let token;
-  try {
-    token = await fs.readFileSync(TOKEN_PATH);
-  } catch (e) {
-    console.log("Token did not exist, get one from Google.")
-    await getAccessToken(oAuth2Client);
-    token = await fs.readFileSync(TOKEN_PATH);
+    client_id, client_secret, redirect_uris[0]);
+    
+    if (token) {
+      oAuth2Client.setCredentials(token);
+    } else {
+    try {
+      token = await fs.readFileSync(TOKEN_PATH);
+    } catch (e) {
+      console.log("Token did not exist, get one from Google.")
+      await getAccessToken(oAuth2Client);
+      token = await fs.readFileSync(TOKEN_PATH);
+      console.log(token)
+    }
+    oAuth2Client.setCredentials(JSON.parse(token)); 
   }
-  oAuth2Client.setCredentials(JSON.parse(token)); 
   return oAuth2Client;
   }
 
@@ -125,7 +130,7 @@ const geocode = async (location) => {
   const gmAPI = new GoogleMapsAPI(publicConfig);
 
   var geocodeParams = {
-    "address":    location
+    "address": location
   };
 
   return new Promise((res, rej) => {
@@ -136,19 +141,22 @@ const geocode = async (location) => {
   })
 }
 
-const main = async () => {
-  const location = await getLatestEventLocation(fs.readFileSync('credentials.json'));
+const getGeocodedLatestEventLocation = async () => {
+  const location = await getLatestEventLocation(fs.readFileSync('credentials.json', process.env.token));
+  console.log({location})
   if (!location) {
     console.log("Location is empty.")
     return
   }
-  console.log(location)
   const geolocation = await geocode(location);
-  console.log(geolocation.results[0])
+  console.log({geolocation})
+  return geolocation.results[0]
 }
 
-main();
+// needed to run locally.
+getGeocodedLatestEventLocation()
 
 module.exports = {
-  SCOPES
+  SCOPES,
+  getGeocodedLatestEventLocation 
 };

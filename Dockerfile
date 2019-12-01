@@ -5,4 +5,5 @@ COPY package*.json ./
 RUN npm install --only=production
 
 COPY . ./
+# ENV token=MISSING
 CMD ["npm", "start"]
